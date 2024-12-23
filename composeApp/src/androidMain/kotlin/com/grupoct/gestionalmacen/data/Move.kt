@@ -1,5 +1,8 @@
 package com.grupoct.gestionalmacen.data
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Move(
     val idproducto: Int,
     val idalmacenorigen: Int,

@@ -20,9 +20,6 @@ import com.grupoct.gestionalmacen.viewmodel.WarehouseViewModel
 fun MoveProductScreen(  viewModel: WarehouseViewModel,
      token: String
 )
- //genera codigo cargar almacenes origen al iniciar la pantalla
-
-
 
 {
     LaunchedEffect(Unit) {
@@ -41,6 +38,20 @@ fun MoveProductScreen(  viewModel: WarehouseViewModel,
     val productCode = remember { mutableStateOf("") }
     val moveQuantity = remember { mutableStateOf("") }
     val userId = 1 // Reemplazar con el ID del usuario autenticado.
+
+    val moveResult by viewModel.moveResult.collectAsState()
+    // Mostrar mensajes según el resultado
+    LaunchedEffect(moveResult) {
+        moveResult?.let { result ->
+            if (result.isSuccess) {
+                // Mostrar mensaje de éxito
+                println("Éxito: ${result.getOrNull()}")
+            } else {
+                // Mostrar mensaje de error
+                println("Error: ${result.exceptionOrNull()?.message}")
+            }
+        }
+    }
 
     // Llamar a la función para obtener los almacenes destino al seleccionar un almacén origen
     LaunchedEffect(selectedOrigin.value) {
@@ -125,7 +136,7 @@ fun MoveProductScreen(  viewModel: WarehouseViewModel,
         val productDescription = productDetails?.descripcion ?: "Sin descripcion"
 
         // Mostrar detalles del producto
-        Text(text = "Detalles: $productDescription", style = MaterialTheme.typography.body1)
+        Text(text = "Producto: $productDescription", style = MaterialTheme.typography.body1)
         Spacer(modifier = Modifier.height(8.dp))
         Text(text = "Stock Disponible: $stockAvailable", style = MaterialTheme.typography.body1)
         Spacer(modifier = Modifier.height(16.dp))
@@ -151,12 +162,7 @@ fun MoveProductScreen(  viewModel: WarehouseViewModel,
                     vitrina = selectedVitrine.value?.nombreVitrina ?: "",
                     idusuario = userId
                 )
-
-            //definir token
-
-
-
-                viewModel.moveProduct("token", move)
+            viewModel.moveProduct(token, move)
             },
             modifier = Modifier.fillMaxWidth(),
             enabled = selectedOrigin.value != null &&

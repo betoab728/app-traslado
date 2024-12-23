@@ -17,6 +17,7 @@ class WarehouseService  {
 
     companion object {
         private const  val BASE_URL = "http://192.168.18.110:5077/api/Tienda"
+        private const  val BASE_URLT = "http://192.168.18.110:5077/api/Traslado"
     }
 
     suspend fun getWarehouses(): List<Warehouse>? {
@@ -72,9 +73,9 @@ class WarehouseService  {
             null
         }
     }
-    suspend fun moveProduct(token: String, move: Move): HttpResponse {
-        val url = "http://localhost:5077/api/Traslado"
-        return client.post(url) {
+    suspend fun moveProduct(token: String, move: Move ): HttpResponse {
+
+        return client.post(BASE_URLT) {
             contentType(ContentType.Application.Json)
             header("Authorization", "Bearer $token")
             setBody(move)

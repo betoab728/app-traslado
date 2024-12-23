@@ -86,12 +86,8 @@ class WarehouseViewModel : ViewModel() {
     fun moveProduct(token: String, move: Move) {
         viewModelScope.launch {
             try {
-                val url = "http://localhost:5077/api/Traslado"
-                val response: HttpResponse = client.post(url) {
-                    contentType(ContentType.Application.Json)
-                    header("Authorization", "Bearer $token")
-                    setBody(move)
-                }
+                val response = warehouseService.moveProduct(token, move)
+
                 if (response.status.value in 200..299) {
                     _moveResult.value = Result.success("Traslado realizado con éxito")
                 } else {

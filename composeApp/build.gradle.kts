@@ -8,6 +8,8 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     kotlin("plugin.serialization") version libs.versions.kotlin.get()
+
+
 }
 
 kotlin {
@@ -37,6 +39,8 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtime.compose) // Solo para Android
             implementation(libs.androidx.lifecycle.viewmodel) // Solo para Android
             implementation(libs.kotlinx.coroutines.android) // Solo para Android
+
+
         }
 
         // Dependencias comunes para todas las plataformas
@@ -57,6 +61,8 @@ kotlin {
             // Dependencias comunes, como coroutines core, que son multiplataforma
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.ktor.client.cio)
+
+
 
         }
 

@@ -15,12 +15,12 @@ import com.grupoct.gestionalmacen.viewmodel.WarehouseViewModel
 @Composable
 fun MainApp() {
     val navController = rememberNavController()
-    val viewModel = LoginViewModel(authService = AuthService()) // Instancia del ViewModel
+    val loginViewModel = LoginViewModel(authService = AuthService())
+    val warehouseViewModel = WarehouseViewModel() // Inicia correctamente el servicio.
 
     NavHost(navController = navController, startDestination = "login") {
         composable("login") {
-            LoginScreen(viewModel = viewModel) { token ->
-                // Navegar a la pantalla de traslado pasando el token como argumento
+            LoginScreen(viewModel = loginViewModel) { token ->
                 navController.navigate("moveProduct?token=$token")
             }
         }
@@ -30,12 +30,13 @@ fun MainApp() {
         ) { backStackEntry ->
             val token = backStackEntry.arguments?.getString("token")
 
-            MoveProductScreen(
-                token = token ?: "",
-                onMove = { productCode, quantity, vitrine, destinationWarehouseId ->
-                    // Lógica para mover el producto
-                }
-            )
+            if (token.isNullOrEmpty()) {
+                navController.navigate("login")
+            } else {
+                MoveProductScreen(
+                    viewModel = warehouseViewModel,
+                    token = token)
+            }
         }
     }
 }

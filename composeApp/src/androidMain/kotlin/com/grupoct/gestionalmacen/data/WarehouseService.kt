@@ -5,8 +5,14 @@ import io.ktor.http.contentType
 import io.ktor.client.request.get
 import io.ktor.http.ContentType
 import io.ktor.client.call.body
+import io.ktor.client.request.header
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
+import io.ktor.http.cio.Response
 
-class WarehouseService {
+
+class WarehouseService  {
     private val client = HttpClientProvider.client
 
     companion object {
@@ -66,4 +72,13 @@ class WarehouseService {
             null
         }
     }
+    suspend fun moveProduct(token: String, move: Move): HttpResponse {
+        val url = "http://localhost:5077/api/Traslado"
+        return client.post(url) {
+            contentType(ContentType.Application.Json)
+            header("Authorization", "Bearer $token")
+            setBody(move)
+        }
+    }
+
 }

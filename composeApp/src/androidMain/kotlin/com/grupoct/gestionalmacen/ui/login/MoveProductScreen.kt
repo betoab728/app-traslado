@@ -19,7 +19,16 @@ import com.grupoct.gestionalmacen.viewmodel.WarehouseViewModel
 
 fun MoveProductScreen(  viewModel: WarehouseViewModel,
      token: String
-) {
+)
+ //genera codigo cargar almacenes origen al iniciar la pantalla
+
+
+
+{
+    LaunchedEffect(Unit) {
+        viewModel.loadWarehouses()
+    }
+
     val warehouses by viewModel.warehouses.collectAsState(initial = emptyList())
     val destinations by viewModel.destinations.collectAsState(initial = emptyList())
     val vitrines by viewModel.vitrines.collectAsState(initial = emptyList())
@@ -32,6 +41,20 @@ fun MoveProductScreen(  viewModel: WarehouseViewModel,
     val productCode = remember { mutableStateOf("") }
     val moveQuantity = remember { mutableStateOf("") }
     val userId = 1 // Reemplazar con el ID del usuario autenticado.
+
+    // Llamar a la función para obtener los almacenes destino al seleccionar un almacén origen
+    LaunchedEffect(selectedOrigin.value) {
+        selectedOrigin.value?.idtienda?.let { originWarehouseId ->
+            viewModel.loadDestinations(originWarehouseId)
+        }
+    }
+
+    //llamar a la funciona para listar vitrinas al seleccionar un almacen destino
+    LaunchedEffect(selectedDestination.value) {
+        selectedDestination.value?.idtienda?.let { destinationWarehouseId ->
+            viewModel.loadVitrines(destinationWarehouseId)
+        }
+    }
 
     // Diseño de la pantalla
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
@@ -95,12 +118,16 @@ fun MoveProductScreen(  viewModel: WarehouseViewModel,
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Detalles del Producto
-        productDetails?.let {
-            Text("Producto: ${it.descripcion}")
-            Text("Stock: ${it.stock}")
-        }
+        //Mostrar descripción del producto
+        // Mostrar detalles del producto y su stock , si no se ha consultado mostrar mensaje de "Producto no encontrado"
 
+        val stockAvailable = productDetails?.stock ?: 0
+        val productDescription = productDetails?.descripcion ?: "Sin descripcion"
+
+        // Mostrar detalles del producto
+        Text(text = "Detalles: $productDescription", style = MaterialTheme.typography.body1)
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(text = "Stock Disponible: $stockAvailable", style = MaterialTheme.typography.body1)
         Spacer(modifier = Modifier.height(16.dp))
 
         // Input: Cantidad

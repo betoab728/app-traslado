@@ -1,4 +1,5 @@
 package com.grupoct.gestionalmacen.ui.login
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
@@ -10,6 +11,14 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.KeyboardType
 import com.grupoct.gestionalmacen.viewmodel.LoginViewModel
 import com.grupoct.gestionalmacen.viewmodel.LoginState
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import com.grupoct.gestionalmacen.R
+
 
 @Composable
 fun LoginScreen(
@@ -39,43 +48,92 @@ fun LoginScreen(
     }
 
     Scaffold(scaffoldState = scaffoldState) { paddingValues ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            TextField(
-                value = username,
-                onValueChange = { username = it },
-                label = { Text("Username") }
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            TextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text("Password") },
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            val isFormValid = username.isNotBlank() && password.isNotBlank()
-            Button(
-                onClick = { viewModel.login(username, password) },
-                enabled = isFormValid && loginState !is LoginState.Loading
-            ) {
-                if (loginState is LoginState.Loading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        color = MaterialTheme.colors.onPrimary,
-                        strokeWidth = 2.dp
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFF336DE1),
+                            Color(0xFFEF2F2F)
+                        )
                     )
-                } else {
-                    Text("Login")
+                )
+                .padding(paddingValues),
+            contentAlignment = Alignment.Center
+        ) {
+
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Traslado de productos",
+                    style = MaterialTheme.typography.h4.copy(color = Color.White),
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "Iniciar sesión",
+                    style = MaterialTheme.typography.h5.copy(color = Color.White),
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                TextField(
+                    value = username,
+                    onValueChange = { username = it },
+                    label = { Text("Username") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = TextFieldDefaults.textFieldColors(
+                        backgroundColor = Color.White,
+                        focusedIndicatorColor = MaterialTheme.colors.secondary,
+                        unfocusedIndicatorColor = MaterialTheme.colors.onSurface
+                    ),
+                    shape = MaterialTheme.shapes.medium
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                TextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text("Password") },
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = TextFieldDefaults.textFieldColors(
+                        backgroundColor = Color.White,
+                        focusedIndicatorColor = MaterialTheme.colors.secondary,
+                        unfocusedIndicatorColor = MaterialTheme.colors.onSurface
+                    ),
+                    shape = MaterialTheme.shapes.medium
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                val isFormValid = username.isNotBlank() && password.isNotBlank()
+                Button(
+                    onClick = { viewModel.login(username, password) },
+                    enabled = isFormValid && loginState !is LoginState.Loading,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.medium,
+                    colors = ButtonDefaults.buttonColors(
+                        backgroundColor = Color.White
+                    )
+                ) {
+                    if (loginState is LoginState.Loading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("Ingresar", color = Color.Blue)
+                    }
                 }
             }
         }
     }
+
 }

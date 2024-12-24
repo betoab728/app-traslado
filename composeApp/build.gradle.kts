@@ -63,7 +63,6 @@ kotlin {
             implementation(libs.ktor.client.cio)
 
 
-
         }
 
         // Dependencias específicas para iOS (si las hay)

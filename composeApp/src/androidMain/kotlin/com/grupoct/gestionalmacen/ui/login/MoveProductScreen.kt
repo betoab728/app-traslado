@@ -1,5 +1,7 @@
 package com.grupoct.gestionalmacen.ui.login
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
@@ -8,12 +10,22 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.grupoct.gestionalmacen.data.Move
+import com.grupoct.gestionalmacen.data.Product
 import com.grupoct.gestionalmacen.data.Vitrine
 import com.grupoct.gestionalmacen.data.Warehouse
 import com.grupoct.gestionalmacen.viewmodel.WarehouseViewModel
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import com.grupoct.gestionalmacen.R
+import org.jetbrains.compose.resources.painterResource
 
 @Composable
 
@@ -39,19 +51,41 @@ fun MoveProductScreen(  viewModel: WarehouseViewModel,
     val moveQuantity = remember { mutableStateOf("") }
     val userId = 1 // Reemplazar con el ID del usuario autenticado.
 
-    val moveResult by viewModel.moveResult.collectAsState()
     // Mostrar mensajes según el resultado
-    LaunchedEffect(moveResult) {
+    val moveResult by viewModel.moveResult.collectAsState()
+
+// Mostrar mensajes según el resultado
+    if (moveResult != null) {
         moveResult?.let { result ->
-            if (result.isSuccess) {
-                // Mostrar mensaje de éxito
-                println("Éxito: ${result.getOrNull()}")
-            } else {
-                // Mostrar mensaje de error
-                println("Error: ${result.exceptionOrNull()?.message}")
-            }
+            AlertDialog(
+                onDismissRequest = {
+                    viewModel.resetMoveResult() // Reinicia el estado del resultado
+                    if (result.isSuccess) {
+                        resetFields(selectedOrigin, selectedDestination, selectedVitrine, moveQuantity, viewModel, productCode)
+                    }
+                },
+                title = {
+                    Text(if (result.isSuccess) "Traslado Exitoso" else "Error en el Traslado")
+                },
+                text = {
+                    Text(
+                        result.getOrNull() ?: result.exceptionOrNull()?.message ?: "Ha ocurrido un error desconocido"
+                    )
+                },
+                confirmButton = {
+                    Button(onClick = {
+                        viewModel.resetMoveResult()
+                        if (result.isSuccess) {
+                            resetFields(selectedOrigin, selectedDestination, selectedVitrine, moveQuantity, viewModel, productCode)
+                        }
+                    }) {
+                        Text("Aceptar")
+                    }
+                }
+            )
         }
     }
+
 
     // Llamar a la función para obtener los almacenes destino al seleccionar un almacén origen
     LaunchedEffect(selectedOrigin.value) {
@@ -67,113 +101,228 @@ fun MoveProductScreen(  viewModel: WarehouseViewModel,
         }
     }
 
-    // Diseño de la pantalla
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        // ComboBox: Almacén Origen
-        DropdownMenu(
-            label = "Almacén Origen",
-            items = warehouses,
-            selectedItem = selectedOrigin.value,
-            onItemSelected = { warehouse -> selectedOrigin.value = warehouse },
-            itemLabel = { it.nombreTienda }
-        )
+    // Diseño de la pantalla con fondo de gradiente azul
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .then(Modifier.background(
+                Brush.linearGradient(
+                    colors = listOf(
+                        Color(0xFF336DE1),
+                        Color(0xFFEF2F2F)
+                    )
+                )
+            ))
+            .padding(16.dp)
+    ) {
+        Column (
+            modifier = Modifier.fillMaxWidth(), // Aseguramos que la columna ocupe todo el ancho
+            horizontalAlignment = Alignment.CenterHorizontally // Centra el contenido de la columna horizontalmente
+        ) {
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        // ComboBox: Almacén Destino
-        DropdownMenu(
-            label = "Almacén Destino",
-            items = destinations,
-            selectedItem = selectedDestination.value,
-            onItemSelected = { warehouse -> selectedDestination.value = warehouse },
-            enabled = selectedOrigin.value != null,
-            itemLabel = { it.nombreTienda }
-        )
-        Spacer(modifier = Modifier.height(16.dp))
+            //titlulo: Movimiento
+            Text(
+                text = "MOVIMIENTO DE PRODUCTO",
+                style = MaterialTheme.typography.h6.copy(color = Color.White),
+                textAlign = TextAlign.Center,
+                fontWeight = FontWeight.Bold
+            )
 
-        // ComboBox: Vitrina
-        // DropdownMenu: Vitrines
-        DropdownMenu(
-            label = "Vitrina",
-            items = vitrines,
-            selectedItem = selectedVitrine.value,
-            onItemSelected = { vitrine -> selectedVitrine.value = vitrine },
-            enabled = selectedDestination.value != null,
-            itemLabel = { it.nombreVitrina }
-        )
 
-        Spacer(modifier = Modifier.height(16.dp))
 
-        // Input: Código de Producto
-        OutlinedTextField(
-            value = productCode.value,
-            onValueChange = { productCode.value = it },
-            label = { Text("Código de Producto") },
-            modifier = Modifier.fillMaxWidth()
-        )
+            Spacer(modifier = Modifier.height(26.dp))
 
-        Spacer(modifier = Modifier.height(8.dp))
+            // ComboBox: Almacén Origen
+            DropdownMenu(
+                label = "Almacén Origen",
+                items = warehouses,
+                selectedItem = selectedOrigin.value,
+                onItemSelected = { warehouse -> selectedOrigin.value = warehouse },
+                itemLabel = { it.nombreTienda }
+            )
 
-        // Botón: Buscar Producto
-        Button(
-            onClick = {
-                selectedOrigin.value?.idtienda?.let { originWarehouseId ->
-                    viewModel.getProductByCodeAndWarehouseId(productCode.value, originWarehouseId)
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ComboBox: Almacén Destino
+            DropdownMenu(
+                label = "Almacén Destino",
+                items = destinations,
+                selectedItem = selectedDestination.value,
+                onItemSelected = { warehouse -> selectedDestination.value = warehouse },
+                enabled = selectedOrigin.value != null,
+                itemLabel = { it.nombreTienda }
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ComboBox: Vitrina
+            DropdownMenu(
+                label = "Vitrina",
+                items = vitrines,
+                selectedItem = selectedVitrine.value,
+                onItemSelected = { vitrine -> selectedVitrine.value = vitrine },
+                enabled = selectedDestination.value != null,
+                itemLabel = { it.nombreVitrina }
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Input: Código de Producto
+            OutlinedTextField(
+                value = productCode.value,
+                onValueChange = { productCode.value = it },
+                label = { Text("Código de Producto", color = Color.White) },
+                modifier = Modifier.fillMaxWidth(),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    textColor = Color.White, // Color del texto ingresado
+                    cursorColor = Color.White, // Color del cursor
+                    focusedBorderColor = Color.White, // Borde blanco al enfocarse
+                    unfocusedBorderColor = Color.White // Borde blanco sin enfoque
+                )
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Botón: Buscar Producto
+            Button(
+                onClick = {
+                    selectedOrigin.value?.idtienda?.let { originWarehouseId ->
+                        viewModel.getProductByCodeAndWarehouseId(productCode.value, originWarehouseId)
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = selectedOrigin.value != null && productCode.value.isNotEmpty(),
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = Color.White
+                )
+            ) {
+                Text("Buscar Producto" ,color = Color.Blue)
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Mostrar descripción del producto
+            val stockAvailable = productDetails?.stock ?: 0
+            val productDescription = productDetails?.descripcion ?: "Sin descripcion"
+
+            Text(text = "Producto: $productDescription", style = MaterialTheme.typography.body1
+            ,color = Color.White)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(text = "Stock Disponible: $stockAvailable", style = MaterialTheme.typography.body1
+            ,color = Color.White)
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Input: Cantidad
+            OutlinedTextField(
+                value = moveQuantity.value,
+
+                onValueChange = {
+                    newValue ->
+                    // Validar que el nuevo valor sea solo números
+                    if (newValue.isEmpty() || newValue.all { it.isDigit() }) {
+                        moveQuantity.value = newValue
+                    }
+                },
+                label = { Text("Cantidad a Mover" , color = Color.White ) },
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    textColor = Color.White,
+                    cursorColor = Color.White,
+                    focusedBorderColor = Color.White,
+                    unfocusedBorderColor = Color.White
+                )
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Estado para el Dialog
+            val showDialogError = remember { mutableStateOf(false) }
+            val dialogMessage = remember { mutableStateOf("") }
+            val showDialogConfirm = remember { mutableStateOf(false) }
+
+
+
+            // Botón: Mover Producto
+            Button( onClick = {
+                val quantity = moveQuantity.value.toIntOrNull() ?: 0
+
+                if (quantity > stockAvailable) {
+                    // Si la cantidad a mover es mayor que el stock, mostrar el dialog
+                    dialogMessage.value = "La cantidad a mover no puede ser mayor que el stock disponible ($stockAvailable)."
+                    showDialogError.value = true
+                } else {
+
+                    // Si la validación pasa, mostrar el diálogo de confirmación
+                    showDialogConfirm.value = true
                 }
             },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = selectedOrigin.value != null && productCode.value.isNotEmpty()
-        ) {
-            Text("Buscar Producto")
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        //Mostrar descripción del producto
-        // Mostrar detalles del producto y su stock , si no se ha consultado mostrar mensaje de "Producto no encontrado"
-
-        val stockAvailable = productDetails?.stock ?: 0
-        val productDescription = productDetails?.descripcion ?: "Sin descripcion"
-
-        // Mostrar detalles del producto
-        Text(text = "Producto: $productDescription", style = MaterialTheme.typography.body1)
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(text = "Stock Disponible: $stockAvailable", style = MaterialTheme.typography.body1)
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Input: Cantidad
-        OutlinedTextField(
-            value = moveQuantity.value,
-            onValueChange = { moveQuantity.value = it },
-            label = { Text("Cantidad a Mover") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Botón: Mover Producto
-        Button(
-            onClick = {
-                val move = Move(
-                    idproducto = productDetails?.idproducto ?: 0,
-                    idalmacenorigen = selectedOrigin.value?.idtienda ?: 0,
-                    idalmacendestino = selectedDestination.value?.idtienda ?: 0,
-                    cantidad = moveQuantity.value.toIntOrNull() ?: 0,
-                    vitrina = selectedVitrine.value?.nombreVitrina ?: "",
-                    idusuario = userId
+                modifier = Modifier.fillMaxWidth(),
+                enabled = selectedOrigin.value != null &&
+                        selectedDestination.value != null &&
+                        selectedVitrine.value != null &&
+                        productDetails != null &&
+                        moveQuantity.value.toIntOrNull() != null,
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = Color.White
                 )
-            viewModel.moveProduct(token, move)
-            },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = selectedOrigin.value != null &&
-                    selectedDestination.value != null &&
-                    selectedVitrine.value != null &&
-                    productDetails != null &&
-                    moveQuantity.value.toIntOrNull() != null
-        ) {
-            Text("Hacer Traslado")
+            ) {
+                Text("Hacer Traslado", color = Color.Blue)
+            }
+
+            // Mostrar Dialog si la cantidad excede el stock
+            if (showDialogError.value) {
+                AlertDialog(
+                    onDismissRequest = { showDialogError.value = false },
+                    title = { Text("Error") },
+                    text = { Text(dialogMessage.value) },
+                    confirmButton = {
+                        Button(onClick = { showDialogError.value = false }) {
+                            Text("Cerrar")
+                        }
+                    }
+                )
+            }
+
+            // Dialogo de confirmación
+
+            // Dialogo de confirmación
+            if (showDialogConfirm.value) {
+                AlertDialog(
+                    onDismissRequest = { showDialogConfirm.value = false },
+                    title = { Text("Confirmación") },
+                    text = { Text("¿Está seguro de que desea trasladar el producto?") },
+                    confirmButton = {
+                        Button(onClick = {
+                            showDialogConfirm.value = false
+                            // Ejecutar la acción de mover el producto
+                            val move = Move(
+                                idproducto = productDetails?.idproducto ?: 0,
+                                idalmacenorigen = selectedOrigin.value?.idtienda ?: 0,
+                                idalmacendestino = selectedDestination.value?.idtienda ?: 0,
+                                cantidad = moveQuantity.value.toIntOrNull() ?: 0,
+                                vitrina = selectedVitrine.value?.nombreVitrina ?: "",
+                                idusuario = userId
+                            )
+                            viewModel.moveProduct(token, move)
+                        }) {
+                            Text("Sí")
+                        }
+                    },
+                    dismissButton = {
+                        Button(onClick = { showDialogConfirm.value = false }) {
+                            Text("No")
+                        }
+                    }
+                )
+            }
+
+
+
         }
     }
+
 }
 
 @Composable
@@ -183,33 +332,38 @@ fun <T> DropdownMenu(
     selectedItem: T?,
     onItemSelected: (T) -> Unit,
     enabled: Boolean = true,
-    itemLabel: (T) -> String // Función para definir cómo mostrar el elemento
+    itemLabel: (T) -> String
 ) {
     var expanded by remember { mutableStateOf(false) } // Estado del menú desplegable
 
     Box(modifier = Modifier.fillMaxWidth()) {
-        // Etiqueta y selección actual
-        Column(
+        OutlinedTextField(
+            value = selectedItem?.let(itemLabel) ?: "",
+            onValueChange = {},
+            readOnly = true, // Evita que el usuario escriba directamente
+            enabled = enabled,
+            label = { Text(label, color= Color.White ) },
+            trailingIcon = {
+                Icon(
+                    imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                    contentDescription = null,
+                   modifier = Modifier.clickable { expanded = !expanded },
+                    tint = Color.White
+                )
+            },
             modifier = Modifier
-                .clickable(enabled = enabled) { expanded = true }
-                .alpha(if (enabled) 1f else ContentAlpha.disabled)
-        ) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.caption,
-                color = MaterialTheme.colors.onSurface.copy(alpha = ContentAlpha.medium)
+                .fillMaxWidth()
+                .clickable(enabled) { expanded = true } // Abre el menú desplegable
+                .padding(8.dp)
+            //bordes blancos
+            ,colors = TextFieldDefaults.outlinedTextFieldColors(
+                textColor = Color.White,
+                cursorColor = Color.White,
+                focusedBorderColor = Color.White,
+                unfocusedBorderColor = Color.White
             )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = selectedItem?.let(itemLabel) ?: "Seleccionar",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                style = MaterialTheme.typography.body1
-            )
-        }
+        )
 
-        // DropdownMenu con los elementos
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false }
@@ -226,4 +380,23 @@ fun <T> DropdownMenu(
             }
         }
     }
+}
+
+// Función para reiniciar los campos
+private fun resetFields(
+    selectedOrigin: MutableState<Warehouse?>,
+    selectedDestination: MutableState<Warehouse?>,
+    selectedVitrine: MutableState<Vitrine?>,
+    moveQuantity: MutableState<String>,
+    viewModel: WarehouseViewModel,
+    //el input para buscar :
+    productCode: MutableState<String>
+
+) {
+    selectedOrigin.value = null
+    selectedDestination.value = null
+    selectedVitrine.value = null
+    moveQuantity.value = ""
+    viewModel.resetProductDetails()
+    productCode.value = ""
 }

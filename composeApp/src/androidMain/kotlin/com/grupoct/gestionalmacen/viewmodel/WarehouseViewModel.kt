@@ -39,6 +39,7 @@ class WarehouseViewModel : ViewModel() {
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
+
     fun loadWarehouses() {
         viewModelScope.launch {
             try {
@@ -48,6 +49,13 @@ class WarehouseViewModel : ViewModel() {
                 _error.value = "Error al cargar los almacenes: ${e.message}"
             }
         }
+    }
+
+    fun resetMoveResult() {
+        _moveResult.value = null
+    }
+    fun resetProductDetails() {
+        _product.value = null // Aquí `_product` es tu `MutableStateFlow`
     }
 
     fun loadDestinations(originWarehouseId: Int) {

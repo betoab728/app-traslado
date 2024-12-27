@@ -9,21 +9,21 @@ import com.grupoct.gestionalmacen.data.AuthService
 import com.grupoct.gestionalmacen.ui.login.LoginScreen
 import com.grupoct.gestionalmacen.ui.login.MainApp
 import com.grupoct.gestionalmacen.viewmodel.LoginViewModel
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
+import android.content.Context
+
 
 class MainActivity : ComponentActivity() {
 
     private val authService = AuthService()
-    private val loginViewModel = LoginViewModel(authService)
+    private lateinit var loginViewModel: LoginViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
-
         super.onCreate(savedInstanceState)
+        val sharedPreferences = getSharedPreferences("AppPrefs", Context.MODE_PRIVATE)
+        loginViewModel = LoginViewModel(authService, sharedPreferences)
 
         setContent {
-           // App()
-          MainApp()
+            MainApp()
         }
     }
 }

@@ -1,5 +1,7 @@
 package com.grupoct.gestionalmacen.data
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
 import io.ktor.http.contentType
 import io.ktor.client.request.get
@@ -12,20 +14,37 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.http.cio.Response
 
 
-class WarehouseService  {
+class WarehouseService (private val context: Context)  {
     private val client = HttpClientProvider.client
+
+    private val sharedPreferences: SharedPreferences =
+        context.getSharedPreferences("AppPrefs", Context.MODE_PRIVATE)
 
     companion object {
         private const  val BASE_URL = "http://192.168.18.110:5077/api/Tienda"
         private const  val BASE_URLT = "http://192.168.18.110:5077/api/Traslado"
+    }
+    private fun getToken(): String? {
+
+        val token = sharedPreferences.getString("token", null)
+
+        Log.d("Token", "Token existente: $token")
+        return token
+
     }
 
     suspend fun getWarehouses(): List<Warehouse>? {
         return try {
             client.get("$BASE_URL") {
 
+                   val token = getToken()
+
+                    if (token != null) {
+                        header("Authorization", "Bearer $token")
+                    }
+
                 //imprimir la respuesta
-                Log.d("WarehouseService", "getWarehouses: ${client.get("$BASE_URL")}")
+               // Log.d("WarehouseService", "getWarehouses: ${client.get("$BASE_URL")}")
 
                 contentType(ContentType.Application.Json)
             }.body()
@@ -38,7 +57,15 @@ class WarehouseService  {
     suspend fun getDestinations(originWarehouseId: Int): List<Warehouse>? {
         return try {
 
+
             client.get("$BASE_URL/$originWarehouseId/almacenes-destino") {
+
+                //token
+                val token = getToken()
+                if (token != null) {
+                    header("Authorization", "Bearer $token")
+                }
+
                 contentType(ContentType.Application.Json)
             }.body()
         } catch (e: Exception) {
@@ -51,6 +78,12 @@ class WarehouseService  {
         return try {
 
             client.get("$BASE_URL/$destinationWarehouseId/vitrinas") {
+
+                //token
+                val token = getToken()
+                if (token != null) {
+                    header("Authorization", "Bearer $token")
+                }
                 contentType(ContentType.Application.Json)
             }.body()
         } catch (e: Exception) {
@@ -63,9 +96,13 @@ class WarehouseService  {
     suspend fun getProductByCodeAndWarehouseId(productCode: String, warehouseId: Int): Product? {
         return try {
 
-            val BASE_URL2 = "http://192.168.18.110:5077/api/Traslado"
 
-            client.get("$BASE_URL2/$productCode/$warehouseId") {
+            client.get("$BASE_URLT/$productCode/$warehouseId") {
+                //token
+                val token = getToken()
+                if (token != null) {
+                    header("Authorization", "Bearer $token")
+                }
                 contentType(ContentType.Application.Json)
             }.body()
         } catch (e: Exception) {
@@ -73,11 +110,17 @@ class WarehouseService  {
             null
         }
     }
-    suspend fun moveProduct(token: String, move: Move ): HttpResponse {
+    suspend fun moveProduct( move: Move ): HttpResponse {
 
         return client.post(BASE_URLT) {
+
+            val token = getToken()
+            if (token != null) {
+                header("Authorization","Bearer $token")
+            }
+
             contentType(ContentType.Application.Json)
-            header("Authorization", "Bearer $token")
+
             setBody(move)
         }
     }

@@ -7,8 +7,13 @@ import com.grupoct.gestionalmacen.data.AuthService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import android.content.SharedPreferences
 
-class LoginViewModel(private val authService: AuthService)  : ViewModel() {
+
+class LoginViewModel(
+    private val authService: AuthService,
+    private val sharedPreferences: SharedPreferences
+)  : ViewModel() {
 
     private val _loginState = MutableStateFlow<LoginState>(LoginState.Idle)
     val loginState: StateFlow<LoginState> = _loginState
@@ -19,10 +24,10 @@ class LoginViewModel(private val authService: AuthService)  : ViewModel() {
             _loginState.value = LoginState.Loading
             try {
                 val token = authService.login(username, password)
-                // Log para verificar la respuesta de la API
-                Log.d("LoginViewModel", "Token: $token")
 
-                if (token != null) {
+                if (!token.isNullOrEmpty()) {
+                    sharedPreferences.edit().putString("token", token).apply()
+                    Log.d("el token se ha guardado", "Token guardado en sp: ${sharedPreferences.getString("token", null)}")
                     _loginState.value = LoginState.Success(token)
                 } else {
                     _loginState.value = LoginState.Error("Invalid credentials")

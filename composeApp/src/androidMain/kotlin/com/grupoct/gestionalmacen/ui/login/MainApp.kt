@@ -1,6 +1,8 @@
 package com.grupoct.gestionalmacen.ui.login
+import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -15,8 +17,12 @@ import com.grupoct.gestionalmacen.viewmodel.WarehouseViewModel
 @Composable
 fun MainApp() {
     val navController = rememberNavController()
-    val loginViewModel = LoginViewModel(authService = AuthService())
-    val warehouseViewModel = WarehouseViewModel() // Inicia correctamente el servicio.
+    val context = LocalContext.current
+
+    val sharedPreferences = context.getSharedPreferences("AppPrefs", Context.MODE_PRIVATE)
+
+    val loginViewModel = remember { LoginViewModel(authService = AuthService(), sharedPreferences = sharedPreferences) }
+    val warehouseViewModel = remember { WarehouseViewModel(context) }
 
     NavHost(navController = navController, startDestination = "login") {
         composable("login") {

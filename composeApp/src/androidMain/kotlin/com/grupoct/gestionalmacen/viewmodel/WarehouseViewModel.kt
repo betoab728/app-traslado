@@ -1,25 +1,18 @@
 package com.grupoct.gestionalmacen.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.grupoct.gestionalmacen.data.*
-import com.grupoct.gestionalmacen.data.HttpClientProvider.client
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.ServerResponseException
-import io.ktor.client.request.header
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.client.statement.HttpResponse
-import io.ktor.client.utils.EmptyContent.contentType
-import io.ktor.http.ContentType
-import io.ktor.http.contentType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class WarehouseViewModel : ViewModel() {
+class WarehouseViewModel(context: Context) : ViewModel() {
 
-    private val warehouseService: WarehouseService by lazy { WarehouseService() }
+    private val warehouseService: WarehouseService by lazy { WarehouseService( context ) }
 
     private val _moveResult = MutableStateFlow<Result<String>?>(null)
     val moveResult: StateFlow<Result<String>?> = _moveResult
@@ -94,7 +87,7 @@ class WarehouseViewModel : ViewModel() {
     fun moveProduct(token: String, move: Move) {
         viewModelScope.launch {
             try {
-                val response = warehouseService.moveProduct(token, move)
+                val response = warehouseService.moveProduct( move)
 
                 if (response.status.value in 200..299) {
                     _moveResult.value = Result.success("Traslado realizado con éxito")

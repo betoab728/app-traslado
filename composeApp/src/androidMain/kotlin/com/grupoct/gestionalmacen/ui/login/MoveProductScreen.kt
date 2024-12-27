@@ -24,8 +24,6 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import com.grupoct.gestionalmacen.R
-import org.jetbrains.compose.resources.painterResource
 
 @Composable
 

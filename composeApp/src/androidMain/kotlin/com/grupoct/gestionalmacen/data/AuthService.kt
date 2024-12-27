@@ -9,7 +9,6 @@ import kotlinx.serialization.json.Json
 
 class AuthService {
     private val client = HttpClientProvider.client
-
     companion object {
         private const val BASE_URL = "http://192.168.18.110:5077/api/auth/login"
     }

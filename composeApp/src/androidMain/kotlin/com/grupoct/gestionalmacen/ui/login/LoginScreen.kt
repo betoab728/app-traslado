@@ -70,12 +70,16 @@ fun LoginScreen(
                     .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    text = "Traslado de productos",
-                    style = MaterialTheme.typography.h4.copy(color = Color.White),
-                    textAlign = TextAlign.Center,
-                    fontWeight = FontWeight.Bold
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                //icono de login
+                Image(
+                    painter = painterResource(id = R.drawable.logo),
+                    contentDescription = "Login",
+                    modifier = Modifier.size(200.dp)
                 )
+                //espacio entre el icono y el texto
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(

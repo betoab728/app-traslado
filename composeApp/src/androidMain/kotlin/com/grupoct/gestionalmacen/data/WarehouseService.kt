@@ -11,7 +11,9 @@ import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.cio.Response
+import io.ktor.http.isSuccess
 
 
 class WarehouseService (private val context: Context)  {
@@ -96,15 +98,28 @@ class WarehouseService (private val context: Context)  {
     suspend fun getProductByCodeAndWarehouseId(productCode: String, warehouseId: Int): Product? {
         return try {
 
-
-            client.get("$BASE_URLT/$productCode/$warehouseId") {
-                //token
+            val response: HttpResponse = client.get("$BASE_URLT/$productCode/$warehouseId") {
+                // token
                 val token = getToken()
                 if (token != null) {
                     header("Authorization", "Bearer $token")
                 }
                 contentType(ContentType.Application.Json)
-            }.body()
+            }
+
+            // Analizar el cuerpo de la respuesta
+            val responseBody = response.bodyAsText()
+
+            if (response.status.isSuccess()) {
+                // Intentar mapear a Product si el estado es exitoso
+                response.body<Product>()
+            } else {
+                // Intentar mapear a ApiError si hay un error
+                val apiError = response.body<ApiError>()
+                println("API Error: ${apiError.message}")
+                null
+            }
+
         } catch (e: Exception) {
             println("Error fetching product: ${e.message}")
             null

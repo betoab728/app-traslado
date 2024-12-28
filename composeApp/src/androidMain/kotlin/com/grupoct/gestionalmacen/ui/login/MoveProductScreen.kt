@@ -20,6 +20,7 @@ import com.grupoct.gestionalmacen.data.Vitrine
 import com.grupoct.gestionalmacen.data.Warehouse
 import com.grupoct.gestionalmacen.viewmodel.WarehouseViewModel
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.ui.text.font.FontWeight
@@ -52,6 +53,24 @@ fun MoveProductScreen(  viewModel: WarehouseViewModel,
     // Mostrar mensajes según el resultado
     val moveResult by viewModel.moveResult.collectAsState()
 
+
+    // Estado para el Dialog
+    val showDialogError = remember { mutableStateOf(false) }
+    val showDialogErrorBusqueda = remember { mutableStateOf(false) }
+
+    val dialogMessage = remember { mutableStateOf("") }
+    val showDialogConfirm = remember { mutableStateOf(false) }
+
+    // Observamos el estado de error del ViewModel
+    val errorMessage by viewModel.error.collectAsState()
+    // Si hay un error, mostramos el Dialog
+    errorMessage?.let {
+        dialogMessage.value = it
+        showDialogErrorBusqueda.value = true
+    }
+
+
+
 // Mostrar mensajes según el resultado
     if (moveResult != null) {
         moveResult?.let { result ->
@@ -63,24 +82,61 @@ fun MoveProductScreen(  viewModel: WarehouseViewModel,
                     }
                 },
                 title = {
-                    Text(if (result.isSuccess) "Traslado Exitoso" else "Error en el Traslado")
-                },
-                text = {
                     Text(
-                        result.getOrNull() ?: result.exceptionOrNull()?.message ?: "Ha ocurrido un error desconocido"
+                        if (result.isSuccess)
+                            "Traslado Exitoso del producto: \n" +
+                                    "${productDetails?.descripcion} \n" +
+                                    "Codigo: ${productDetails?.codigo} \n" +
+                                    "Almacen Origen: ${selectedOrigin.value?.nombreTienda}\n" +
+                                    "Almacen Destino: ${selectedDestination.value?.nombreTienda}\n" +
+                                    "Vitrina: ${selectedVitrine.value?.nombreVitrina}\n" +
+                                    "Cantidad: ${moveQuantity.value}"
+                        else "Error en el Traslado"
                     )
                 },
-                confirmButton = {
-                    Button(onClick = {
-                        viewModel.resetMoveResult()
-                        if (result.isSuccess) {
-                            resetFields(selectedOrigin, selectedDestination, selectedVitrine, moveQuantity, viewModel, productCode)
+                text = {
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center // Centra todo el contenido
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                result.getOrNull() ?: result.exceptionOrNull()?.message ?: "Ha ocurrido un error desconocido",
+                                textAlign = TextAlign.Center // Centra el texto si es muy largo
+                            )
+                            if (result.isSuccess) {
+                                Icon(
+                                    imageVector = Icons.Default.CheckCircle,
+                                    contentDescription = "Traslado exitoso",
+                                    tint = Color.Green,
+                                    modifier = Modifier.size(48.dp) // Tamaño del ícono
+                                )
+                            }
                         }
-                    }) {
-                        Text("Aceptar")
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            viewModel.resetMoveResult() // Reinicia el estado del resultado
+                            if (result.isSuccess) {
+                                resetFields(selectedOrigin, selectedDestination, selectedVitrine, moveQuantity, viewModel, productCode)
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            backgroundColor = Color.Blue
+                        )
+                    ) {
+                        Text("Aceptar" , color = Color.White)
                     }
                 }
             )
+
+
         }
     }
 
@@ -198,6 +254,8 @@ fun MoveProductScreen(  viewModel: WarehouseViewModel,
                 Text("Buscar Producto" ,color = Color.Blue)
             }
 
+
+
             Spacer(modifier = Modifier.height(16.dp))
 
             // Mostrar descripción del producto
@@ -235,11 +293,6 @@ fun MoveProductScreen(  viewModel: WarehouseViewModel,
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Estado para el Dialog
-            val showDialogError = remember { mutableStateOf(false) }
-            val dialogMessage = remember { mutableStateOf("") }
-            val showDialogConfirm = remember { mutableStateOf(false) }
-
 
 
             // Botón: Mover Producto
@@ -273,10 +326,27 @@ fun MoveProductScreen(  viewModel: WarehouseViewModel,
             if (showDialogError.value) {
                 AlertDialog(
                     onDismissRequest = { showDialogError.value = false },
-                    title = { Text("Error") },
+                    title = { Text("Error en stock") },
                     text = { Text(dialogMessage.value) },
                     confirmButton = {
                         Button(onClick = { showDialogError.value = false }) {
+                            Text("Cerrar")
+                        }
+                    }
+                )
+            }
+
+            // Mostrar el Dialog de error si showDialogError es true
+            if (showDialogErrorBusqueda.value) {
+                AlertDialog(
+                    onDismissRequest = { showDialogErrorBusqueda.value = false
+                        viewModel.clearError()
+                    },
+                    title = { Text("Error de busqueda") },
+                    text = { Text(dialogMessage.value) },
+                    confirmButton = {
+                        Button(onClick = { showDialogErrorBusqueda.value = false
+                            viewModel.clearError() }) {
                             Text("Cerrar")
                         }
                     }
@@ -334,27 +404,29 @@ fun <T> DropdownMenu(
 ) {
     var expanded by remember { mutableStateOf(false) } // Estado del menú desplegable
 
-    Box(modifier = Modifier.fillMaxWidth()) {
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled) { expanded = true } // Abre el menú al hacer clic en cualquier parte
+    ) {
+        val dropdownWidth = maxWidth // Usa el ancho del Box como referencia
+
         OutlinedTextField(
             value = selectedItem?.let(itemLabel) ?: "",
             onValueChange = {},
             readOnly = true, // Evita que el usuario escriba directamente
             enabled = enabled,
-            label = { Text(label, color= Color.White ) },
+            label = { Text(label, color = Color.White) },
             trailingIcon = {
                 Icon(
                     imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                     contentDescription = null,
-                   modifier = Modifier.clickable { expanded = !expanded },
+                    modifier = Modifier.clickable { expanded = !expanded }, // Abre o cierra el menú con el ícono
                     tint = Color.White
                 )
             },
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(enabled) { expanded = true } // Abre el menú desplegable
-                .padding(8.dp)
-            //bordes blancos
-            ,colors = TextFieldDefaults.outlinedTextFieldColors(
+            modifier = Modifier.fillMaxWidth(),
+            colors = TextFieldDefaults.outlinedTextFieldColors(
                 textColor = Color.White,
                 cursorColor = Color.White,
                 focusedBorderColor = Color.White,
@@ -362,23 +434,27 @@ fun <T> DropdownMenu(
             )
         )
 
-        DropdownMenu(
+        // Menú desplegable
+        androidx.compose.material.DropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = { expanded = false }, // Cierra el menú al tocar fuera
+            modifier = Modifier.width(dropdownWidth) // Ajusta el ancho del menú desplegable
         ) {
             items.forEach { item ->
-                DropdownMenuItem(
+                androidx.compose.material.DropdownMenuItem(
                     onClick = {
-                        onItemSelected(item)
-                        expanded = false
+                        onItemSelected(item) // Llama al evento al seleccionar un item
+                        expanded = false // Cierra el menú después de seleccionar
                     }
                 ) {
-                    Text(text = itemLabel(item))
+                    Text(text = itemLabel(item)) // Muestra el nombre del item
                 }
             }
         }
     }
 }
+
+
 
 // Función para reiniciar los campos
 private fun resetFields(

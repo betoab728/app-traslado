@@ -77,9 +77,13 @@ class WarehouseViewModel(context: Context) : ViewModel() {
         viewModelScope.launch {
             try {
                 val response = warehouseService.getProductByCodeAndWarehouseId(productCode, warehouseId)
-                response?.let { _product.value = it }
+                if (response != null) {
+                    _product.value = response
+                } else {
+                    _error.value = "Producto no encontrado o error al procesar la solicitud."
+                }
             } catch (e: Exception) {
-                _error.value = "Error al buscar el producto: ${e.message}"
+                _error.value = "Error inesperado: ${e.message}"
             }
         }
     }
@@ -102,5 +106,8 @@ class WarehouseViewModel(context: Context) : ViewModel() {
                 _moveResult.value = Result.failure(Exception("Error desconocido: ${e.message}"))
             }
         }
+    }
+    fun clearError() {
+        _error.value = null
     }
 }
